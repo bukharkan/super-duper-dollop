@@ -1,0 +1,32 @@
+# Dependency folders (Wajib di-ignore karena di cloud akan diinstall ulang)
+node_modules/
+/www/node_modules/
+
+# OS/IDE sampah (Biar folder config local Mac/VS Code gak ikutan)
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Capacitor & Native Platforms Config
+# -------------------------------------------------------------
+# JIKA kamu pakai GITHUB ACTIONS untuk build (build total di cloud):
+# Kamu bisa ignore folder /ios karena cloud runner akan nge-generate murni dari nol.
+/ios/
+
+# JIKA kamu pakai IONIC APPFLOW / BUILD LOKAL tapi mau simpan setting Xcode:
+# Hapus tanda pagar (#) pada baris-baris di bawah ini dan beri pagar pada `/ios/` di atas:
+# /ios/App/build/
+# /ios/App/Pods/
+# /ios/App/xcshareddata/
+# /ios/App/xcuserdata/
+# /ios/App/PluginConfig.json

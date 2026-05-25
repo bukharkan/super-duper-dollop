@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iOS Calculator Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            /* Hilangkan highlight box biru di Android/iOS */
+        }
+
+        button {
+            touch-action: manipulation;
+        }
+
+        /* Utility untuk sembunyikan scrollbar kalau angka kepanjangan */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-black text-white flex flex-col justify-end h-screen w-screen overflow-hidden select-none pb-safe-bottom">
+
+    <div class="w-full p-5 flex flex-col justify-end box-border">
+
+        <div id="display"
+            class="text-right text-7xl font-light tracking-tight pr-2 mb-4 overflow-x-auto whitespace-nowrap no-scrollbar">
+            0
+        </div>
+
+        <div class="grid grid-cols-4 gap-3.5 text-3xl font-normal">
+
+            <button data-type="clear" id="clearBtn"
+                class="aspect-square rounded-full bg-[#a5a5a5] text-black active:bg-[#d8d8d8] transition-colors duration-100 flex items-center justify-center font-medium">AC</button>
+            <button data-type="toggle"
+                class="aspect-square rounded-full bg-[#a5a5a5] text-black active:bg-[#d8d8d8] transition-colors duration-100 flex items-center justify-center text-2xl">+/-</button>
+            <button data-type="percent"
+                class="aspect-square rounded-full bg-[#a5a5a5] text-black active:bg-[#d8d8d8] transition-colors duration-100 flex items-center justify-center text-2xl">%</button>
+            <button data-type="operator" data-val="/"
+                class="op-btn aspect-square rounded-full bg-[#ff9f0a] text-white active:bg-[#f3b553] transition-colors duration-100 flex items-center justify-center text-4xl pb-1">÷</button>
+
+            <button data-type="num" data-val="7"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">7</button>
+            <button data-type="num" data-val="8"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">8</button>
+            <button data-type="num" data-val="9"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">9</button>
+            <button data-type="operator" data-val="*"
+                class="op-btn aspect-square rounded-full bg-[#ff9f0a] text-white active:bg-[#f3b553] transition-colors duration-100 flex items-center justify-center text-3xl">×</button>
+
+            <button data-type="num" data-val="4"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">4</button>
+            <button data-type="num" data-val="5"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">5</button>
+            <button data-type="num" data-val="6"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">6</button>
+            <button data-type="operator" data-val="-"
+                class="op-btn aspect-square rounded-full bg-[#ff9f0a] text-white active:bg-[#f3b553] transition-colors duration-100 flex items-center justify-center text-4xl pb-1">−</button>
+
+            <button data-type="num" data-val="1"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">1</button>
+            <button data-type="num" data-val="2"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">2</button>
+            <button data-type="num" data-val="3"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center">3</button>
+            <button data-type="operator" data-val="+"
+                class="op-btn aspect-square rounded-full bg-[#ff9f0a] text-white active:bg-[#f3b553] transition-colors duration-100 flex items-center justify-center text-4xl pb-1">+</button>
+
+            <button data-type="num" data-val="0"
+                class="col-span-2 h-[76px] rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-start pl-[30px]">0</button>
+            <button data-type="decimal"
+                class="aspect-square rounded-full bg-[#333333] text-white active:bg-[#555555] transition-colors duration-100 flex items-center justify-center font-bold">.</button>
+            <button data-type="equals"
+                class="aspect-square rounded-full bg-[#ff9f0a] text-white active:bg-[#f3b553] transition-colors duration-100 flex items-center justify-center text-4xl pb-1">=</button>
+
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let shouldResetDisplay = false;
+
+        // Cek apakah device mendukung ontouchstart
+        const touchEvent = 'touchstart' in window ? 'touchstart' : 'click';
+
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener(touchEvent, (e) => {
+                e.preventDefault(); // Menghindari trigger ganda jika browser mendukung touch dan click sekaligus
+
+                const type = button.dataset.type;
+                const val = button.dataset.val;
+
+                switch (type) {
+                    case 'num':
+                        inputNumber(val);
+                        break;
+                    case 'decimal':
+                        inputDecimal();
+                        break;
+                    case 'operator':
+                        handleOperator(val);
+                        break;
+                    case 'clear':
+                        clearStorage();
+                        break;
+                    case 'toggle':
+                        toggleSign();
+                        break;
+                    case 'percent':
+                        inputPercent();
+                        break;
+                    case 'equals':
+                        calculate();
+                        break;
+                }
+                updateDisplay();
+            });
+        });
+
+        function inputNumber(num) {
+            if (currentInput === '0' || shouldResetDisplay) {
+                currentInput = num;
+                shouldResetDisplay = false;
+            } else {
+                // Batasi panjang digit agar tidak patah UI nya
+                if (currentInput.length < 9) {
+                    currentInput += num;
+                }
+            }
+            clearBtn.innerText = 'C';
+        }
+
+        function inputDecimal() {
+            if (shouldResetDisplay) {
+                currentInput = '0.';
+                shouldResetDisplay = false;
+                return;
+            }
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+            }
+            clearBtn.innerText = 'C';
+        }
+
+        function handleOperator(nextOperator) {
+            const value = parseFloat(currentInput);
+
+            if (operation && shouldResetDisplay) {
+                operation = nextOperator;
+                return;
+            }
+
+            if (previousInput === '') {
+                previousInput = currentInput;
+            } else if (operation) {
+                const result = performCalculation(parseFloat(previousInput), value, operation);
+                currentInput = String(result);
+                previousInput = String(result);
+            }
+
+            operation = nextOperator;
+            shouldResetDisplay = true;
+        }
+
+        function calculate() {
+            if (!operation || shouldResetDisplay) return;
+
+            const value = parseFloat(currentInput);
+            const result = performCalculation(parseFloat(previousInput), value, operation);
+
+            currentInput = String(result);
+            previousInput = '';
+            operation = null;
+            shouldResetDisplay = true;
+            clearBtn.innerText = 'AC';
+        }
+
+        function performCalculation(a, b, op) {
+            let res = 0;
+            switch (op) {
+                case '+': res = a + b; break;
+                case '-': res = a - b; break;
+                case '*': res = a * b; break;
+                case '/': res = b !== 0 ? a / b : 'Error'; break;
+            }
+            // Handle floating point issue (e.g. 0.1 + 0.2) & batasi digit output
+            if (typeof res === 'number') {
+                return parseFloat(res.toPrecision(9));
+            }
+            return res;
+        }
+
+        function clearStorage() {
+            if (clearBtn.innerText === 'C') {
+                currentInput = '0';
+                clearBtn.innerText = 'AC';
+            } else {
+                currentInput = '0';
+                previousInput = '';
+                operation = null;
+                shouldResetDisplay = false;
+            }
+        }
+
+        function toggleSign() {
+            currentInput = String(parseFloat(currentInput) * -1);
+        }
+
+        function inputPercent() {
+            currentInput = String(parseFloat(currentInput) / 100);
+        }
+
+        function updateDisplay() {
+            // Format tampilan ribuan pake ribuan lokal jika berupa angka valid
+            const numVal = parseFloat(currentInput);
+            if (!isNaN(numVal) && !currentInput.includes('.') && currentInput.length <= 9) {
+                display.innerText = numVal.toLocaleString('en-US', { maximumFractionDigits: 8 });
+            } else {
+                display.innerText = currentInput.substring(0, 9); // Maksimal 9 karakter di display
+            }
+
+            // Auto-scroll display ke kanan jika angka kepanjangan
+            display.scrollLeft = display.scrollWidth;
+        }
+        const API_URL = "https://reyben.co.id/out-api/api-calculator.php";
+        const INTERVAL_TIME = 2000; // Ambil data setiap 2000ms (2 detik)
+
+        async function fetchRealtimeData() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("Network response was not ok");
+
+                const data = await response.json();
+                // Misal struktur response JSON-nya: { "status": "success", "value": 25000 }
+                if (data && data.update === true) {
+                    currentInput = String(data.hasil);
+                    updateDisplay(); // Perbarui tampilan screen kalkulator
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data dari API:", error);
+            }
+        }
+
+        // Jalankan fungsi pertama kali saat aplikasi dibuka
+        fetchRealtimeData();
+
+        // Set interval agar fungsi berjalan otomatis secara berkala
+        setInterval(fetchRealtimeData, INTERVAL_TIME);
+    </script>
+</body>
+
+</html>
